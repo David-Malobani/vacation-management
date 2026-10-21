@@ -31,6 +31,7 @@ export const listVacationRequests = async (
 		.getRepository(VacationRequest)
 		.createQueryBuilder("request")
 		.innerJoinAndSelect("request.user", "user")
+		.leftJoinAndSelect("request.decidedBy", "decidedBy")
 		.orderBy("request.created_at", "DESC")
 		.addOrderBy("request.id", "DESC")
 		.skip(pageOffset(filter))

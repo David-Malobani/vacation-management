@@ -55,6 +55,8 @@ export class ChangeVacationRequestDecisionHandler
 
 			request.status = command.status;
 			request.comments = comment;
+			request.decidedById = command.validatorId;
+			request.decidedAt = new Date();
 			const dto = toVacationRequestDto(await vacationRequestRepository.save(manager, request));
 
 			record(new VacationRequestDecisionChangedEvent(dto, command.validatorId, previousStatus));

@@ -32,6 +32,8 @@ export class RejectVacationRequestHandler
 
 			request.status = VacationStatus.Rejected;
 			request.comments = comment;
+			request.decidedById = command.validatorId;
+			request.decidedAt = new Date();
 			const dto = toVacationRequestDto(await vacationRequestRepository.save(manager, request));
 
 			record(new VacationRequestRejectedEvent(dto, command.validatorId));

@@ -30,6 +30,8 @@ export class ApproveVacationRequestHandler
 
 			request.status = VacationStatus.Approved;
 			request.comments = command.comment?.trim() || null;
+			request.decidedById = command.validatorId;
+			request.decidedAt = new Date();
 			const dto = toVacationRequestDto(await vacationRequestRepository.save(manager, request));
 
 			record(new VacationRequestApprovedEvent(dto, command.validatorId));
