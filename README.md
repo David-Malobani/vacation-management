@@ -228,3 +228,11 @@ Additional rules: only pending requests can be approved or rejected, a validator
 - **Dates are `DATE` columns exchanged as `YYYY-MM-DD` strings.** No timezone conversion happens anywhere, so a vacation never shifts by a day. ISO dates also compare correctly as strings.
 - **Pagination** uses `OFFSET`/`LIMIT` plus a count query (two queries per page). Results are sorted by `created_at DESC, id DESC`, so the order is stable and rows never jump between pages. Each list has an index in exactly that order: `(created_at, id)` for "All", `(status, created_at, id)` for a status tab and `(user_id, created_at, id)` for one employee. Postgres reads a page straight from the index without sorting (checked with `EXPLAIN`). The team calendar query uses the same expression as the overlap constraint, so it is served by that GiST index. Very deep pages would eventually call for keyset pagination, which is not needed at this scale.
 - **Frontend.** Axios goes through a Vite proxy (`/api`), so there is no CORS in development. The Pinia store restores the session after a reload. Route guards use `meta.roles`. The dashboard keeps its filters in the URL, so a filtered view survives a reload. Shared components (table, form, dialog, pagination) are used by both roles' pages. The team calendar hides reasons and comments, because colleagues only need to see dates.
+
+## Known limitations
+
+- **Durations are calendar days.** Weekends and public holidays are not excluded, and a vacation must span at least two days (the end date must be after the start date, as rule 1 states).
+- **Notifications are out of scope.** Domain events are published in-process after each commit; the only listener today writes a log line. E-mail or chat notifications would subscribe to the same events.
+- **Authentication is intentionally simple.** Demo users are seeded; there is no sign-up, password reset or token refresh. Tokens expire after 8 hours.
+- **Single team.** Every validator sees every request, and the planning calendar shows the whole company.
+- **AWS deployment is not included.** The build produces a Lambda-ready bundle, but no infrastructure definition is part of this repository.
