@@ -7,6 +7,7 @@ import { assertModifiable, assertOwnedBy } from "../vacation-request.rules";
 
 /** A requester withdraws one of their pending requests (the row is deleted). */
 export class CancelVacationRequestCommand implements Command<void> {
+	declare readonly __result?: void;
 	static readonly TYPE = "CancelVacationRequest";
 	readonly type = CancelVacationRequestCommand.TYPE;
 

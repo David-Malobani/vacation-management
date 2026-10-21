@@ -6,6 +6,7 @@ import { vacationRequestRepository } from "../vacation-request.repository";
 import { assertDecidable, assertRejectionComment } from "../vacation-request.rules";
 
 export class RejectVacationRequestCommand implements Command<VacationRequestDto> {
+	declare readonly __result?: VacationRequestDto;
 	static readonly TYPE = "RejectVacationRequest";
 	readonly type = RejectVacationRequestCommand.TYPE;
 
