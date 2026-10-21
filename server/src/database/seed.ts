@@ -73,6 +73,7 @@ const seed = async (): Promise<void> => {
 				DEMO_USERS.map((user) => manager.create(User, { ...user, password }))
 			);
 			const userIdByEmail = new Map(users.map((user) => [user.email, user.id]));
+			const validatorId = users.find((user) => user.role === Role.Validator)!.id;
 
 			await manager.save(
 				SAMPLE_REQUESTS.map((sample) =>
@@ -83,6 +84,7 @@ const seed = async (): Promise<void> => {
 						status: sample.status,
 						reason: sample.reason ?? null,
 						comments: sample.comments ?? null,
+						...(sample.status !== VacationStatus.Pending && { decidedById: validatorId, decidedAt: new Date() }),
 					})
 				)
 			);

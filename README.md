@@ -107,6 +107,28 @@ All endpoints except login require `Authorization: Bearer <token>`. Errors alway
 
 Paginated responses: `{ items, page, pageSize, total, totalPages }` (default page size 10, max 100).
 
+## Database schema
+
+```
+users (1) ──< vacation_requests (N)          user_id    → users.id  ON DELETE CASCADE
+users (1) ──< vacation_requests (N)          decided_by → users.id  ON DELETE SET NULL
+```
+
+| Table               | Columns                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `users`             | `id`, `name`, `email` (unique), `password` (bcrypt hash), `role` (`Requester` / `Validator`), `created_at`                            |
+| `vacation_requests` | `id`, `user_id`, `start_date`, `end_date` (DATE), `reason`, `status` (`Pending` / `Approved` / `Rejected`), `comments`, `decided_by`, `decided_at`, `created_at`, `updated_at` |
+
+Constraints:
+- `CHECK (end_date > start_date)`
+- a rejected request must have a non-blank `comments`
+- `decided_at` is set exactly when the request is no longer pending
+- `EXCLUDE USING gist (user_id WITH =, daterange(start_date, end_date, '[]') WITH &&) WHERE (status <> 'Rejected')`: no overlapping active requests per user, even under concurrent inserts
+
+`decided_by` / `decided_at` record which validator made (or last corrected) the decision, and when. They are additions to the schema given in the assignment.
+
+The schema is created by TypeORM migrations in `server/src/database/migrations` (`synchronize` is off).
+
 ---
 
 ## Architecture

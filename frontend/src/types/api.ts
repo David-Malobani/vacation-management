@@ -25,6 +25,9 @@ export interface VacationRequest {
 	status: VacationStatus;
 	/** Validator's comment (always present on rejected requests) */
 	comments: string | null;
+	/** Validator who decided; null while pending (or if that account was deleted) */
+	decidedBy?: { id: number; name: string } | null;
+	decidedAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 }

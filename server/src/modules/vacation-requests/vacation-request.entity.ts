@@ -47,6 +47,18 @@ export class VacationRequest {
 	@Column({ type: "text", nullable: true })
 	comments: string | null;
 
+	/** Validator who made (or last corrected) the decision. Null while pending. */
+	@Index("idx_vacation_requests_decided_by")
+	@Column({ name: "decided_by", type: "integer", nullable: true })
+	decidedById: number | null;
+
+	@ManyToOne("User", { nullable: true, onDelete: "SET NULL" })
+	@JoinColumn({ name: "decided_by" })
+	decidedBy: User | null;
+
+	@Column({ name: "decided_at", type: "timestamptz", nullable: true })
+	decidedAt: Date | null;
+
 	@CreateDateColumn({ name: "created_at", type: "timestamptz" })
 	createdAt: Date;
 
@@ -63,6 +75,9 @@ export type VacationRequestDto = {
 	reason: string | null;
 	status: VacationStatus;
 	comments: string | null;
+	/** Present when the decider was loaded (list queries). */
+	decidedBy?: { id: number; name: string } | null;
+	decidedAt: string | null;
 	createdAt: string;
 	updatedAt: string;
 };
@@ -76,6 +91,11 @@ export const toVacationRequestDto = (request: VacationRequest): VacationRequestD
 	reason: request.reason,
 	status: request.status,
 	comments: request.comments,
+	decidedBy:
+		request.decidedBy === undefined
+			? undefined
+			: request.decidedBy && { id: request.decidedBy.id, name: request.decidedBy.name },
+	decidedAt: request.decidedAt?.toISOString() ?? null,
 	createdAt: request.createdAt.toISOString(),
 	updatedAt: request.updatedAt.toISOString(),
 });

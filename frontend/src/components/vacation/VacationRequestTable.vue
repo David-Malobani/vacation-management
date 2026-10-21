@@ -46,7 +46,13 @@ defineSlots<{ actions?(props: { request: VacationRequest }): unknown }>();
 					<td class="max-w-56 px-4 py-3 break-words text-slate-700">
 						{{ request.reason ?? "—" }}
 					</td>
-					<td class="px-4 py-3"><StatusBadge :status="request.status" /></td>
+					<td class="px-4 py-3">
+						<StatusBadge :status="request.status" />
+						<p v-if="request.decidedAt" class="mt-1 text-xs whitespace-nowrap text-slate-500">
+							<template v-if="request.decidedBy">by {{ request.decidedBy.name }}<br /></template>
+							{{ formatDateTime(request.decidedAt) }}
+						</p>
+					</td>
 					<td class="max-w-64 px-4 py-3 break-words text-slate-700">
 						{{ request.comments ?? "—" }}
 					</td>
