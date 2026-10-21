@@ -1,0 +1,23 @@
+{
+  "name": "vacation-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vacation management app: Vue 3 frontend + Node.js (CommonEventFramework) API + PostgreSQL",
+  "scripts": {
+    "postinstall": "npm install --prefix server && npm install --prefix frontend",
+    "setup": "node -e \"const fs=require('fs');if(fs.existsSync('server/.env')){console.log('server/.env already exists')}else{fs.copyFileSync('server/.env.example','server/.env');console.log('Created server/.env')}\"",
+    "db:up": "docker compose up -d --wait db",
+    "db:down": "docker compose down",
+    "db:setup": "npm run db:setup --prefix server",
+    "db:seed": "npm run db:seed --prefix server",
+    "dev": "concurrently -k -n api,web -c blue,magenta \"npm run dev --prefix server\" \"npm run dev --prefix frontend\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "test": "npm test --prefix server",
+    "typecheck": "npm run typecheck --prefix server && npm run typecheck --prefix frontend",
+    "build": "npm run build --prefix server && npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
