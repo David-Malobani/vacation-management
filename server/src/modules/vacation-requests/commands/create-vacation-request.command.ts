@@ -7,6 +7,7 @@ import { OVERLAP_MESSAGE, vacationRequestRepository } from "../vacation-request.
 import { assertValidDateRange } from "../vacation-request.rules";
 
 export class CreateVacationRequestCommand implements Command<VacationRequestDto> {
+	declare readonly __result?: VacationRequestDto;
 	static readonly TYPE = "CreateVacationRequest";
 	readonly type = CreateVacationRequestCommand.TYPE;
 

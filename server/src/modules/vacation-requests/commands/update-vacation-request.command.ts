@@ -7,6 +7,7 @@ import { OVERLAP_MESSAGE, vacationRequestRepository } from "../vacation-request.
 import { assertModifiable, assertOwnedBy, assertValidDateRange } from "../vacation-request.rules";
 
 export class UpdateVacationRequestCommand implements Command<VacationRequestDto> {
+	declare readonly __result?: VacationRequestDto;
 	static readonly TYPE = "UpdateVacationRequest";
 	readonly type = UpdateVacationRequestCommand.TYPE;
 

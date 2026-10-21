@@ -16,7 +16,7 @@ export interface CommandHandler<TCommand extends Command<TResult>, TResult = unk
 	execute(command: TCommand): Promise<TResult>;
 }
 
-type CommandResult<TCommand> = TCommand extends Command<infer R> ? R : never;
+type CommandResult<TCommand> = TCommand extends Command<infer TResult> ? TResult : never;
 
 export class CommandBus {
 	private readonly handlers = new Map<string, CommandHandler<any, any>>();

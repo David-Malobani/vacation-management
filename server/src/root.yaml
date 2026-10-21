@@ -1,0 +1,365 @@
+openapi: 3.0.3
+info:
+  title: Vacation Management API
+  version: 1.0.0
+  description: |
+    Requesters submit vacation requests, validators approve or reject them.
+
+    Access control is declared per route and enforced by src/index.ts before
+    the input parser runs:
+    - `security` (global default: bearerAuth) requires a valid JWT; `security: []` makes a route public.
+    - `x-roles` restricts the route to the listed roles.
+
+    Path parameters use CEF's `:param` syntax.
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Vacation requests
+  - name: Team
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Exchange email and password for a JWT
+      security: []
+      x-inputParser: modules/auth/auth.handlers#parseLogin
+      x-handler: modules/auth/auth.handlers#login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email, example: alice@example.com }
+                password: { type: string, example: password123 }
+      responses:
+        "200":
+          description: Token and user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: "#/components/schemas/User" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: The authenticated user
+      x-handler: modules/auth/auth.handlers#me
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (validator dashboard filter)
+      x-roles: [Validator]
+      x-inputParser: modules/users/user.handlers#parseListUsers
+      x-handler: modules/users/user.handlers#listUsers
+      parameters:
+        - { in: query, name: role, schema: { $ref: "#/components/schemas/Role" } }
+      responses:
+        "200":
+          description: Users ordered by name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/User" } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /vacation-requests:
+    post:
+      tags: [Vacation requests]
+      summary: Submit a vacation request (CreateVacationRequestCommand)
+      x-roles: [Requester]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseCreateVacationRequest
+      x-handler: modules/vacation-requests/vacation-request.handlers#createVacationRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VacationRequestInput" }
+      responses:
+        "201":
+          description: Created, status Pending
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequest" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+    get:
+      tags: [Vacation requests]
+      summary: All requests, filterable and paginated (validator dashboard)
+      x-roles: [Validator]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseAllVacationRequests
+      x-handler: modules/vacation-requests/vacation-request.handlers#listRequests
+      parameters:
+        - { in: query, name: status, schema: { $ref: "#/components/schemas/Status" } }
+        - { in: query, name: userId, schema: { type: integer } }
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/PageSize" }
+      responses:
+        "200":
+          description: A page of requests, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequestPage" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /me/vacation-requests:
+    get:
+      tags: [Vacation requests]
+      summary: The caller's own requests, paginated
+      x-roles: [Requester]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseMyVacationRequests
+      x-handler: modules/vacation-requests/vacation-request.handlers#listRequests
+      parameters:
+        - { in: query, name: status, schema: { $ref: "#/components/schemas/Status" } }
+        - { $ref: "#/components/parameters/Page" }
+        - { $ref: "#/components/parameters/PageSize" }
+      responses:
+        "200":
+          description: A page of requests, newest first
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequestPage" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /vacation-requests/:id:
+    put:
+      tags: [Vacation requests]
+      summary: Edit one of your pending requests (UpdateVacationRequestCommand)
+      x-roles: [Requester]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseUpdateVacationRequest
+      x-handler: modules/vacation-requests/vacation-request.handlers#updateVacationRequest
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VacationRequestInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequest" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+    delete:
+      tags: [Vacation requests]
+      summary: Cancel one of your pending requests (CancelVacationRequestCommand)
+      x-roles: [Requester]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseCancelVacationRequest
+      x-handler: modules/vacation-requests/vacation-request.handlers#cancelVacationRequest
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+      responses:
+        "204": { description: Cancelled }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+
+  /vacation-requests/:id/approve:
+    post:
+      tags: [Vacation requests]
+      summary: Approve a pending request (ApproveVacationRequestCommand)
+      x-roles: [Validator]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseApproveVacationRequest
+      x-handler: modules/vacation-requests/vacation-request.handlers#approveVacationRequest
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment: { type: string, nullable: true }
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequest" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+
+  /vacation-requests/:id/reject:
+    post:
+      tags: [Vacation requests]
+      summary: Reject a pending request with a mandatory comment (RejectVacationRequestCommand)
+      x-roles: [Validator]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseRejectVacationRequest
+      x-handler: modules/vacation-requests/vacation-request.handlers#rejectVacationRequest
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [comment]
+              properties:
+                comment: { type: string, minLength: 1 }
+      responses:
+        "200":
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequest" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+
+  /team/vacations:
+    get:
+      tags: [Team]
+      summary: Pending and approved vacations of the whole team in a date range (planning calendar)
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseTeamVacations
+      x-handler: modules/vacation-requests/vacation-request.handlers#teamVacations
+      parameters:
+        - { in: query, name: from, required: true, schema: { type: string, format: date } }
+        - { in: query, name: to, required: true, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Vacations intersecting [from, to]
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from: { type: string, format: date }
+                  to: { type: string, format: date }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        userId: { type: integer }
+                        userName: { type: string }
+                        startDate: { type: string, format: date }
+                        endDate: { type: string, format: date }
+                        status: { $ref: "#/components/schemas/Status" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      { in: path, name: id, required: true, schema: { type: integer } }
+    Page:
+      { in: query, name: page, schema: { type: integer, minimum: 1, default: 1 } }
+    PageSize:
+      { in: query, name: pageSize, schema: { type: integer, minimum: 1, maximum: 100, default: 10 } }
+
+  schemas:
+    Role:
+      type: string
+      enum: [Requester, Validator]
+    Status:
+      type: string
+      enum: [Pending, Approved, Rejected]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+    VacationRequestInput:
+      type: object
+      required: [startDate, endDate]
+      properties:
+        startDate: { type: string, format: date, example: "2026-12-21" }
+        endDate: { type: string, format: date, example: "2026-12-24" }
+        reason: { type: string, nullable: true, maxLength: 500 }
+    VacationRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        user:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            email: { type: string }
+        startDate: { type: string, format: date }
+        endDate: { type: string, format: date }
+        reason: { type: string, nullable: true }
+        status: { $ref: "#/components/schemas/Status" }
+        comments: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    VacationRequestPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/VacationRequest" } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+
+  responses:
+    ValidationError:
+      description: Invalid input (VALIDATION_ERROR)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Unauthorized:
+      description: Missing, invalid or expired token (UNAUTHORIZED)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Forbidden:
+      description: Wrong role or not the owner (FORBIDDEN)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NotFound:
+      description: Resource not found (NOT_FOUND)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    BusinessRuleViolation:
+      description: Overlap, already decided, approved request is immutable... (BUSINESS_RULE_VIOLATION)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
