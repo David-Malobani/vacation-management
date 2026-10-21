@@ -31,10 +31,10 @@ export class AuthContext {
  * the auth context. A parser turns the raw event into a typed input (usually a
  * command) and throws a ValidationError on bad input.
  */
-export type InputParserFn<TInput> = (event: CommonEvent, auth: AuthContext) => TInput;
+export type InputParserFn<InputType> = (event: CommonEvent, auth: AuthContext) => InputType;
 
-export type HandlerFn<TInput = unknown> = (
-	input: TInput,
+export type HandlerFn<InputType = unknown> = (
+	input: InputType,
 	event: CommonEvent,
 	auth: AuthContext
 ) => Promise<APIGatewayProxyStructuredResultV2 | object>;

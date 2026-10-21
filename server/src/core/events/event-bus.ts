@@ -11,12 +11,12 @@ export interface DomainEvent {
 	readonly occurredAt: Date;
 }
 
-export type EventListener<E extends DomainEvent = DomainEvent> = (event: E) => Promise<void> | void;
+export type EventListener<EventType extends DomainEvent = DomainEvent> = (event: EventType) => Promise<void> | void;
 
 export class EventBus {
 	private readonly listeners = new Map<string, EventListener<any>[]>();
 
-	subscribe<E extends DomainEvent>(type: string, listener: EventListener<E>): void {
+	subscribe<EventType extends DomainEvent>(type: string, listener: EventListener<EventType>): void {
 		const existing = this.listeners.get(type) ?? [];
 		this.listeners.set(type, [...existing, listener]);
 	}

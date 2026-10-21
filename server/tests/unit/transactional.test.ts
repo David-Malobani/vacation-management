@@ -9,7 +9,7 @@ const event = (type: string): DomainEvent => ({ type, occurredAt: new Date() });
 const fakeDataSource = () => {
 	const state = { committed: false };
 	const dataSource = {
-		transaction: async <TResult>(work: (manager: EntityManager) => Promise<TResult>): Promise<TResult> => {
+		transaction: async <ResultType>(work: (manager: EntityManager) => Promise<ResultType>): Promise<ResultType> => {
 			const result = await work({} as EntityManager); // throws → rollback, never committed
 			state.committed = true;
 			return result;
