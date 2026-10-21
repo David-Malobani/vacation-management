@@ -34,8 +34,10 @@ export const listVacationRequests = async (
 		.leftJoinAndSelect("request.decidedBy", "decidedBy")
 		.orderBy("request.created_at", "DESC")
 		.addOrderBy("request.id", "DESC")
-		.skip(pageOffset(filter))
-		.take(filter.pageSize);
+		// Plain OFFSET/LIMIT: both joins are many-to-one, so they can't duplicate rows.
+		// (TypeORM's skip/take would add a DISTINCT-ids query meant for one-to-many joins.)
+		.offset(pageOffset(filter))
+		.limit(filter.pageSize);
 
 	if (filter.status) {
 		query.andWhere("request.status = :status", { status: filter.status });
@@ -48,7 +50,11 @@ export const listVacationRequests = async (
 	return toPage(requests.map(toVacationRequestDto), total, filter);
 };
 
-/** Pending and approved vacations of everyone that intersect [from, to] (inclusive). */
+/**
+ * Pending and approved vacations of everyone that intersect [from, to] (inclusive).
+ * Written with the same expressions as the no-overlap EXCLUDE constraint
+ * (status <> 'Rejected', daterange &&) so Postgres can use its GiST index.
+ */
 export const listTeamVacations = async (
 	dataSource: DataSource,
 	from: string,
@@ -58,8 +64,8 @@ export const listTeamVacations = async (
 		.getRepository(VacationRequest)
 		.createQueryBuilder("request")
 		.innerJoinAndSelect("request.user", "user")
-		.where("request.status IN (:...statuses)", { statuses: [VacationStatus.Pending, VacationStatus.Approved] })
-		.andWhere("request.start_date <= :to AND request.end_date >= :from", { from, to })
+		.where(`request.status <> '${VacationStatus.Rejected}'`)
+		.andWhere("daterange(request.start_date, request.end_date, '[]') && daterange(:from, :to, '[]')", { from, to })
 		.orderBy("user.name", "ASC")
 		.addOrderBy("request.start_date", "ASC")
 		.getMany();

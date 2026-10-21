@@ -5,6 +5,7 @@ import { User } from "../modules/users/user.entity";
 import { VacationRequest } from "../modules/vacation-requests/vacation-request.entity";
 import { InitialSchema1760000000000 } from "./migrations/1760000000000-InitialSchema";
 import { AddDecisionAudit1760000000001 } from "./migrations/1760000000001-AddDecisionAudit";
+import { PaginationIndexes1760000000002 } from "./migrations/1760000000002-PaginationIndexes";
 
 export const AppDataSource = new DataSource({
 	type: "postgres",
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
 	password: env.db.password,
 	database: env.db.name,
 	entities: [User, VacationRequest],
-	migrations: [InitialSchema1760000000000, AddDecisionAudit1760000000001],
+	migrations: [InitialSchema1760000000000, AddDecisionAudit1760000000001, PaginationIndexes1760000000002],
 	// Schema is owned by migrations, never auto-synced.
 	synchronize: false,
 	logging: ["error"],
