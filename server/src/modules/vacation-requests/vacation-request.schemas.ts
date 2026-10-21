@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { idSchema } from "../../core/http/request";
 import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from "../../core/pagination";
 import { VacationStatus } from "./vacation-request.entity";
 
@@ -60,7 +61,7 @@ export const myRequestsQuerySchema = z.object({
 });
 
 export const allRequestsQuerySchema = myRequestsQuerySchema.extend({
-	userId: z.coerce.number().int().positive().optional(),
+	userId: idSchema.optional(),
 });
 
 /** Keeps the calendar query bounded: at most ~3 months per call. */
