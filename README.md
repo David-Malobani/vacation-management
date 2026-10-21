@@ -17,7 +17,7 @@ A web application to request and validate vacations.
 
 ## Quick start
 
-Prerequisites: **Node.js 20+**, plus **Docker** *or* a local **PostgreSQL 16**.
+Prerequisites: **Node.js 22.12+** (see `.nvmrc`), plus **Docker** *or* a local **PostgreSQL 16**.
 
 ```bash
 npm install          # installs the root, server/ and frontend/ dependencies
