@@ -17,12 +17,14 @@ export enum VacationStatus {
 }
 
 @Entity({ name: "vacation_requests" })
-@Index("idx_vacation_requests_status_created_at", ["status", "createdAt"])
+// Index columns and sort directions are defined in the migrations (synchronize is off).
+@Index("idx_vacation_requests_created_at", ["createdAt", "id"])
+@Index("idx_vacation_requests_status_created_at", ["status", "createdAt", "id"])
+@Index("idx_vacation_requests_user_created_at", ["userId", "createdAt", "id"])
 export class VacationRequest {
 	@PrimaryGeneratedColumn("identity", { generatedIdentity: "ALWAYS" })
 	id: number;
 
-	@Index("idx_vacation_requests_user_id")
 	@Column({ name: "user_id", type: "integer" })
 	userId: number;
 
