@@ -44,7 +44,8 @@ export const readQuery = (event: CommonEvent): Record<string, string> => {
 	return query;
 };
 
-const idSchema = z.coerce.number({ error: "must be a positive integer" }).int("must be a positive integer").positive("must be a positive integer");
+const POSITIVE_INTEGER = "must be a positive integer";
+const idSchema = z.coerce.number({ error: POSITIVE_INTEGER }).int(POSITIVE_INTEGER).positive(POSITIVE_INTEGER);
 
 export const readIdParam = (event: CommonEvent, name = "id"): number =>
 	validate(z.object({ [name]: idSchema }), event.pathParameters ?? {})[name] as number;
