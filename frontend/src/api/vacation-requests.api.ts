@@ -48,6 +48,16 @@ export const vacationRequestsApi = {
 		return data;
 	},
 
+	/** Corrects an earlier decision (approved ↔ rejected) before the vacation starts. */
+	async changeDecision(
+		id: number,
+		status: Exclude<VacationStatus, "Pending">,
+		comment: string | null
+	): Promise<VacationRequest> {
+		const { data } = await http.put(`/vacation-requests/${id}/decision`, { status, comment });
+		return data;
+	},
+
 	async team(from: string, to: string): Promise<TeamVacation[]> {
 		const { data } = await http.get<{ items: TeamVacation[] }>("/team/vacations", { params: { from, to } });
 		return data.items;

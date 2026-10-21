@@ -3,7 +3,7 @@
 A web application to request and validate vacations.
 
 - **Requesters** submit vacation requests, follow their status, and edit or cancel requests that are still pending.
-- **Validators** review every request on a filterable, paginated dashboard and approve or reject them. A rejection requires a comment.
+- **Validators** review every request on a filterable, paginated dashboard and approve or reject them. A rejection requires a comment. A decision made by mistake can be edited until the vacation starts.
 - **Both roles** share a team planning calendar that shows who is off and when.
 
 | Layer    | Stack                                                                                   |
@@ -102,6 +102,7 @@ All endpoints except login require `Authorization: Bearer <token>`. Errors alway
 | `DELETE /vacation-requests/:id`       | Requester      | Cancel own **pending** request → 204                           |
 | `POST /vacation-requests/:id/approve` | Validator      | Approve a pending request. Optional `{ comment }`              |
 | `POST /vacation-requests/:id/reject`  | Validator      | Reject a pending request. **Required** `{ comment }`           |
+| `PUT /vacation-requests/:id/decision` | Validator     | Correct a decision made by mistake (approved ↔ rejected) before the vacation starts. `{ status, comment }`, comment required for Rejected |
 | `GET /team/vacations?from=&to=`       | any            | Pending and approved vacations in a range (≤ 93 days)          |
 
 Paginated responses: `{ items, page, pageSize, total, totalPages }` (default page size 10, max 100).
@@ -181,7 +182,7 @@ Reads (lists, team calendar) are plain query functions: they change nothing, so 
 | 5. A rejection must have a comment           | Required field in dialog       | zod schema + `assertRejectionComment`                   | `CHECK`: rejected ⇒ non-blank `comments` |
 | 6. Only validators approve or reject         | Validator-only routes/buttons  | `x-roles: [Validator]` in root.yaml                     | –                                              |
 
-Additional rules: only pending requests can be approved or rejected, a requester can only change their own requests (403), and only requesters submit requests.
+Additional rules: only pending requests can be approved or rejected, a validator can correct a decision (approved ↔ rejected) only until the vacation starts, a requester can only change their own requests (403), and only requesters submit requests.
 
 ## Technical decisions
 
@@ -189,6 +190,7 @@ Additional rules: only pending requests can be approved or rejected, a requester
 - **Declarative access control.** Each route in `root.yaml` uses the OpenAPI `security` field (JWT required by default, `security: []` for public routes) plus an `x-roles` extension. The entry point enforces both before any parser or handler runs. The same file also produces the Swagger docs at `/doc`. Ownership checks (e.g. "your own request") need data, so they live in the command handlers.
 - **Commands and events.** Every state change is a command with exactly one handler, registered in one place (`container.ts`). HTTP handlers only build commands and dispatch them, so the same commands could be triggered from SQS or a CLI. Handlers run inside `Transactional`, which **publishes events only after COMMIT**. A rolled-back change therefore never notifies anyone, and a failing listener never breaks the command.
 - **Rules as pure functions + database constraints.** The rules have no I/O, which makes them easy to unit test. The database constraints guarantee them even when two requests race: two overlapping submissions arriving at the same time are stopped by the `EXCLUDE` constraint, which the repository maps to the same 409 error. Approve, reject, update and cancel lock the row (`FOR UPDATE`), so two validators cannot both decide the same request.
+- **Correcting a decision is a separate command.** Rule 3 is read as "a requester can never modify an approved request". A validator who clicked the wrong button can flip the decision with `ChangeVacationRequestDecisionCommand`, but only before the vacation starts. Changing to rejected still requires a comment, re-approving checks overlaps again, and every correction emits `VacationRequestDecisionChangedEvent` with the previous status, so the log shows who changed what.
 - **Validation at the edge with zod.** Malformed input gets a 400 with every issue listed under `details`. Business violations get a 409 with a readable message.
 - **Dates are `DATE` columns exchanged as `YYYY-MM-DD` strings.** No timezone conversion happens anywhere, so a vacation never shifts by a day. ISO dates also compare correctly as strings.
 - **Pagination** uses offset/limit with a total count, filtered in SQL and backed by an index on `(status, created_at)` and on `user_id`.
