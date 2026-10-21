@@ -84,6 +84,16 @@ export type VacationRequestDto = {
 	updatedAt: string;
 };
 
+/**
+ * decidedBy has three cases: relation not loaded (undefined, field omitted),
+ * nobody decided yet or the validator was deleted (null), or the validator.
+ */
+const toDeciderDto = (request: VacationRequest): VacationRequestDto["decidedBy"] => {
+	if (request.decidedBy === undefined) return undefined;
+	if (request.decidedBy === null) return null;
+	return { id: request.decidedBy.id, name: request.decidedBy.name };
+};
+
 export const toVacationRequestDto = (request: VacationRequest): VacationRequestDto => ({
 	id: request.id,
 	userId: request.userId,
@@ -93,10 +103,7 @@ export const toVacationRequestDto = (request: VacationRequest): VacationRequestD
 	reason: request.reason,
 	status: request.status,
 	comments: request.comments,
-	decidedBy:
-		request.decidedBy === undefined
-			? undefined
-			: request.decidedBy && { id: request.decidedBy.id, name: request.decidedBy.name },
+	decidedBy: toDeciderDto(request),
 	decidedAt: request.decidedAt?.toISOString() ?? null,
 	createdAt: request.createdAt.toISOString(),
 	updatedAt: request.updatedAt.toISOString(),

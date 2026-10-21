@@ -82,7 +82,9 @@ const seed = async (): Promise<void> => {
 						status: sample.status,
 						reason: sample.reason ?? null,
 						comments: sample.comments ?? null,
-						...(sample.status !== VacationStatus.Pending && { decidedById: validatorId, decidedAt: new Date() }),
+						// Decided samples are attributed to the demo validator.
+						decidedById: sample.status === VacationStatus.Pending ? null : validatorId,
+						decidedAt: sample.status === VacationStatus.Pending ? null : new Date(),
 					})
 				)
 			);

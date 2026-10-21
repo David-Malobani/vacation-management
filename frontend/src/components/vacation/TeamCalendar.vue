@@ -15,17 +15,27 @@ const days = computed(() => daysOfMonth(props.month));
 const today = todayIso();
 const weekday = new Intl.DateTimeFormat(undefined, { weekday: "narrow" });
 
+type Row = { userId: number; userName: string; vacations: TeamVacation[] };
+
+/** Current user first, then everyone else alphabetically. */
+const byCurrentUserThenName = (a: Row, b: Row): number => {
+	if (a.userId === props.currentUserId) return -1;
+	if (b.userId === props.currentUserId) return 1;
+	return a.userName.localeCompare(b.userName);
+};
+
+/** One row per person who has at least one vacation in the month. */
 const rows = computed(() => {
-	const byUser = new Map<number, { userId: number; userName: string; vacations: TeamVacation[] }>();
+	const rowsByUser = new Map<number, Row>();
 	for (const vacation of props.vacations) {
-		const row = byUser.get(vacation.userId) ?? { userId: vacation.userId, userName: vacation.userName, vacations: [] };
+		let row = rowsByUser.get(vacation.userId);
+		if (!row) {
+			row = { userId: vacation.userId, userName: vacation.userName, vacations: [] };
+			rowsByUser.set(vacation.userId, row);
+		}
 		row.vacations.push(vacation);
-		byUser.set(vacation.userId, row);
 	}
-	// Current user first, then alphabetical.
-	return [...byUser.values()].sort((a, b) =>
-		a.userId === props.currentUserId ? -1 : b.userId === props.currentUserId ? 1 : a.userName.localeCompare(b.userName)
-	);
+	return [...rowsByUser.values()].sort(byCurrentUserThenName);
 });
 
 const vacationOn = (vacations: TeamVacation[], day: string): TeamVacation | undefined =>
@@ -33,8 +43,7 @@ const vacationOn = (vacations: TeamVacation[], day: string): TeamVacation | unde
 
 const cellClass = (vacation: TeamVacation | undefined, day: string) => {
 	if (vacation?.status === "Approved") return "bg-emerald-500";
-	if (vacation?.status === "Pending")
-		return "bg-amber-300 bg-[repeating-linear-gradient(45deg,transparent_0_4px,rgb(255_255_255/0.45)_4px_8px)]";
+	if (vacation?.status === "Pending") return "bg-amber-300 pending-stripes";
 	return isWeekend(day) ? "bg-slate-100" : "bg-white";
 };
 
