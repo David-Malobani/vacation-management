@@ -67,8 +67,10 @@ const confirm = () => {
 			</p>
 			<p>
 				<span class="font-medium text-slate-900">{{ request.user?.name }}</span>
-				· {{ formatDate(request.startDate) }} → {{ formatDate(request.endDate) }}
-				({{ daysInclusive(request.startDate, request.endDate) }} days)
+				· {{ formatDate(request.startDate) }} → {{ formatDate(request.endDate) }} ({{
+					daysInclusive(request.startDate, request.endDate)
+				}}
+				days)
 			</p>
 			<p v-if="request.reason" class="rounded-lg bg-slate-50 p-3 italic">“{{ request.reason }}”</p>
 

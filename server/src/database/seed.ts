@@ -69,9 +69,7 @@ const seed = async (): Promise<void> => {
 			await manager.query(`TRUNCATE "vacation_requests", "users" RESTART IDENTITY CASCADE`);
 
 			const password = await bcrypt.hash(DEMO_PASSWORD, 10);
-			const users = await manager.save(
-				DEMO_USERS.map((user) => manager.create(User, { ...user, password }))
-			);
+			const users = await manager.save(DEMO_USERS.map((user) => manager.create(User, { ...user, password })));
 			const userIdByEmail = new Map(users.map((user) => [user.email, user.id]));
 			const validatorId = users.find((user) => user.role === Role.Validator)!.id;
 

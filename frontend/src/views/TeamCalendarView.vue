@@ -52,10 +52,16 @@ const peopleAway = computed(() => new Set(vacations.value.map((vacation) => vaca
 				<p class="mt-1 text-sm text-slate-500">Approved and pending vacations of the whole team.</p>
 			</div>
 			<div class="flex items-center gap-2">
-				<BaseButton variant="secondary" size="sm" aria-label="Previous month" @click="goTo(shiftMonth(month, -1))">←</BaseButton>
+				<BaseButton variant="secondary" size="sm" aria-label="Previous month" @click="goTo(shiftMonth(month, -1))"
+					>←</BaseButton
+				>
 				<p class="min-w-36 text-center font-medium text-slate-900">{{ formatMonth(month) }}</p>
-				<BaseButton variant="secondary" size="sm" aria-label="Next month" @click="goTo(shiftMonth(month, 1))">→</BaseButton>
-				<BaseButton v-if="month !== currentMonth" variant="ghost" size="sm" @click="goTo(currentMonth)">Today</BaseButton>
+				<BaseButton variant="secondary" size="sm" aria-label="Next month" @click="goTo(shiftMonth(month, 1))"
+					>→</BaseButton
+				>
+				<BaseButton v-if="month !== currentMonth" variant="ghost" size="sm" @click="goTo(currentMonth)"
+					>Today</BaseButton
+				>
 			</div>
 		</header>
 
@@ -67,7 +73,9 @@ const peopleAway = computed(() => new Set(vacations.value.map((vacation) => vaca
 				<div class="flex items-center gap-4">
 					<span class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-emerald-500" /> Approved</span>
 					<span class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-amber-300" /> Pending</span>
-					<span class="flex items-center gap-1.5"><span class="size-3 rounded-sm bg-slate-100 ring-1 ring-slate-200" /> Weekend</span>
+					<span class="flex items-center gap-1.5"
+						><span class="size-3 rounded-sm bg-slate-100 ring-1 ring-slate-200" /> Weekend</span
+					>
 				</div>
 			</div>
 			<TeamCalendar :month="month" :vacations="vacations" :current-user-id="auth.user?.id" :loading="loading" />

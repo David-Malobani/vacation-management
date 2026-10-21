@@ -21,7 +21,10 @@ type CommandResult<TCommand> = TCommand extends Command<infer TResult> ? TResult
 export class CommandBus {
 	private readonly handlers = new Map<string, CommandHandler<any, any>>();
 
-	register<TCommand extends Command<any>>(type: string, handler: CommandHandler<TCommand, CommandResult<TCommand>>): void {
+	register<TCommand extends Command<any>>(
+		type: string,
+		handler: CommandHandler<TCommand, CommandResult<TCommand>>
+	): void {
 		if (this.handlers.has(type)) {
 			throw new Error(`A handler is already registered for command "${type}"`);
 		}

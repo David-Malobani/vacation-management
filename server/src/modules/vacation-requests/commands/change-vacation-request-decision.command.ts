@@ -23,9 +23,10 @@ export class ChangeVacationRequestDecisionCommand implements Command<VacationReq
 	) {}
 }
 
-export class ChangeVacationRequestDecisionHandler
-	implements CommandHandler<ChangeVacationRequestDecisionCommand, VacationRequestDto>
-{
+export class ChangeVacationRequestDecisionHandler implements CommandHandler<
+	ChangeVacationRequestDecisionCommand,
+	VacationRequestDto
+> {
 	constructor(private readonly transactional: Transactional) {}
 
 	async execute(command: ChangeVacationRequestDecisionCommand): Promise<VacationRequestDto> {

@@ -33,7 +33,8 @@ const vacationOn = (vacations: TeamVacation[], day: string): TeamVacation | unde
 
 const cellClass = (vacation: TeamVacation | undefined, day: string) => {
 	if (vacation?.status === "Approved") return "bg-emerald-500";
-	if (vacation?.status === "Pending") return "bg-amber-300 bg-[repeating-linear-gradient(45deg,transparent_0_4px,rgb(255_255_255/0.45)_4px_8px)]";
+	if (vacation?.status === "Pending")
+		return "bg-amber-300 bg-[repeating-linear-gradient(45deg,transparent_0_4px,rgb(255_255_255/0.45)_4px_8px)]";
 	return isWeekend(day) ? "bg-slate-100" : "bg-white";
 };
 

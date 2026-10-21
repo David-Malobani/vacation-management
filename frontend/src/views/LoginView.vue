@@ -39,7 +39,8 @@ const onSubmit = async () => {
 	error.value = null;
 	try {
 		await auth.login(form.email.trim(), form.password);
-		const redirect = typeof route.query.redirect === "string" && route.query.redirect.startsWith("/") ? route.query.redirect : null;
+		const redirect =
+			typeof route.query.redirect === "string" && route.query.redirect.startsWith("/") ? route.query.redirect : null;
 		await router.replace(redirect ?? auth.homeRoute);
 	} catch (err) {
 		error.value = getErrorMessage(err);
@@ -59,7 +60,9 @@ const onSubmit = async () => {
 			</div>
 
 			<form class="card space-y-4 p-6" novalidate @submit.prevent="onSubmit">
-				<AlertBanner v-if="sessionExpired && !error" variant="info">Your session expired. Please sign in again.</AlertBanner>
+				<AlertBanner v-if="sessionExpired && !error" variant="info"
+					>Your session expired. Please sign in again.</AlertBanner
+				>
 				<AlertBanner v-if="error" variant="error">{{ error }}</AlertBanner>
 
 				<FormField id="email" label="Email">

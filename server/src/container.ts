@@ -41,10 +41,7 @@ commandBus.register(UpdateVacationRequestCommand.TYPE, new UpdateVacationRequest
 commandBus.register(CancelVacationRequestCommand.TYPE, new CancelVacationRequestHandler(transactional));
 commandBus.register(ApproveVacationRequestCommand.TYPE, new ApproveVacationRequestHandler(transactional));
 commandBus.register(RejectVacationRequestCommand.TYPE, new RejectVacationRequestHandler(transactional));
-commandBus.register(
-	ChangeVacationRequestDecisionCommand.TYPE,
-	new ChangeVacationRequestDecisionHandler(transactional)
-);
+commandBus.register(ChangeVacationRequestDecisionCommand.TYPE, new ChangeVacationRequestDecisionHandler(transactional));
 
 registerVacationRequestLogListener(eventBus);
 
