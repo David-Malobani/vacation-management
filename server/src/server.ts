@@ -21,9 +21,7 @@ const toCommonEvent = (req: Request): CommonEvent => ({
 	method: req.method,
 	body: typeof req.body === "string" && req.body.length > 0 ? req.body : null,
 	pathParameters: {}, // filled in by CEF from the matched root.yaml route
-	queryStringParameters: Object.fromEntries(
-		Object.entries(req.query).map(([key, value]) => [key, firstValue(value)])
-	),
+	queryStringParameters: Object.fromEntries(Object.entries(req.query).map(([key, value]) => [key, firstValue(value)])),
 	headers: Object.fromEntries(
 		Object.entries(req.headers).map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value])
 	),
@@ -39,7 +37,9 @@ const localContext = {
 
 const logRequests = (req: Request, res: ExpressResponse, next: NextFunction) => {
 	const startedAt = Date.now();
-	res.on("finish", () => console.info(`[http] ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - startedAt}ms)`));
+	res.on("finish", () =>
+		console.info(`[http] ${req.method} ${req.originalUrl} → ${res.statusCode} (${Date.now() - startedAt}ms)`)
+	);
 	next();
 };
 

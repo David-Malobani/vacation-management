@@ -12,6 +12,11 @@
 		@apply border-red-400 focus:border-red-500 focus:ring-red-500/30;
 	}
 
+	/* Diagonal stripes so pending days stand out from approved ones, not only by colour. */
+	.pending-stripes {
+		background-image: repeating-linear-gradient(45deg, transparent 0 4px, rgb(255 255 255 / 0.45) 4px 8px);
+	}
+
 	.card {
 		@apply rounded-xl border border-slate-200 bg-white shadow-sm;
 	}

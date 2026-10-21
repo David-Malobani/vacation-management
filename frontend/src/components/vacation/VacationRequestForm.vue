@@ -37,18 +37,25 @@ defineExpose({ reset });
 
 const today = todayIso();
 
+const startDateError = (): string | null => {
+	if (!form.startDate) return "Start date is required";
+	if (form.startDate < today) return "Vacation requests cannot start in the past";
+	return null;
+};
+
+const endDateError = (): string | null => {
+	if (!form.endDate) return "End date is required";
+	if (form.startDate && form.endDate <= form.startDate) return "End date must be after start date";
+	return null;
+};
+
+const reasonError = (): string | null =>
+	form.reason.length > REASON_MAX ? `Reason must be at most ${REASON_MAX} characters` : null;
+
 const errors = computed(() => ({
-	startDate: !form.startDate
-		? "Start date is required"
-		: form.startDate < today
-			? "Vacation requests cannot start in the past"
-			: null,
-	endDate: !form.endDate
-		? "End date is required"
-		: form.startDate && form.endDate <= form.startDate
-			? "End date must be after start date"
-			: null,
-	reason: form.reason.length > REASON_MAX ? `Reason must be at most ${REASON_MAX} characters` : null,
+	startDate: startDateError(),
+	endDate: endDateError(),
+	reason: reasonError(),
 }));
 
 const isValid = computed(() => Object.values(errors.value).every((error) => error === null));

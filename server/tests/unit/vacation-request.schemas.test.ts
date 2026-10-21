@@ -11,7 +11,9 @@ import {
 
 describe("vacationRequestBodySchema", () => {
 	it("accepts valid dates and normalises an empty reason to null", () => {
-		expect(validate(vacationRequestBodySchema, { startDate: "2026-11-01", endDate: "2026-11-03", reason: "  " })).toEqual({
+		expect(
+			validate(vacationRequestBodySchema, { startDate: "2026-11-01", endDate: "2026-11-03", reason: "  " })
+		).toEqual({
 			startDate: "2026-11-01",
 			endDate: "2026-11-03",
 			reason: null,

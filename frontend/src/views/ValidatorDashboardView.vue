@@ -31,15 +31,16 @@ const readFilters = (query: LocationQuery) => {
 
 const filters = computed(() => readFilters(route.query));
 
+/** Changing any filter goes back to page 1 unless a page is given. Empty values are left out of the URL. */
 const setFilters = (patch: Partial<{ status: VacationStatus; userId: number; page: number }>) => {
 	const next = { ...filters.value, page: 1, ...patch };
-	void router.replace({
-		query: {
-			...(next.status && { status: next.status }),
-			...(next.userId && { userId: String(next.userId) }),
-			...(next.page > 1 && { page: String(next.page) }),
-		},
-	});
+
+	const query: Record<string, string> = {};
+	if (next.status) query.status = next.status;
+	if (next.userId) query.userId = String(next.userId);
+	if (next.page > 1) query.page = String(next.page);
+
+	void router.replace({ query });
 };
 
 const statusFilter = computed({

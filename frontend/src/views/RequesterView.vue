@@ -94,7 +94,9 @@ const confirmCancel = async () => {
 	<div class="space-y-6">
 		<header>
 			<h1 class="text-2xl font-semibold text-slate-900">My vacation requests</h1>
-			<p class="mt-1 text-sm text-slate-500">Submit a request and follow its status. Only pending requests can be changed.</p>
+			<p class="mt-1 text-sm text-slate-500">
+				Submit a request and follow its status. Only pending requests can be changed.
+			</p>
 		</header>
 
 		<AlertBanner v-if="notice" variant="success" dismissible @dismiss="notice = null">{{ notice }}</AlertBanner>
@@ -104,7 +106,13 @@ const confirmCancel = async () => {
 				{{ editing ? `Edit request #${editing.id}` : "New vacation request" }}
 			</h2>
 			<AlertBanner v-if="formError" variant="error" class="mb-4">{{ formError }}</AlertBanner>
-			<VacationRequestForm ref="form" :editing="editing" :submitting="submitting" @submit="submit" @cancel="stopEditing" />
+			<VacationRequestForm
+				ref="form"
+				:editing="editing"
+				:submitting="submitting"
+				@submit="submit"
+				@cancel="stopEditing"
+			/>
 		</section>
 
 		<section class="card" aria-labelledby="list-title">
@@ -118,7 +126,9 @@ const confirmCancel = async () => {
 			<VacationRequestTable
 				:requests="list.items.value"
 				:loading="list.loading.value"
-				:empty-text="statusFilter ? `No ${statusFilter.toLowerCase()} requests.` : 'You have not submitted any requests yet.'"
+				:empty-text="
+					statusFilter ? `No ${statusFilter.toLowerCase()} requests.` : 'You have not submitted any requests yet.'
+				"
 			>
 				<template #actions="{ request }">
 					<div v-if="request.status === 'Pending'" class="flex justify-end gap-1">

@@ -28,7 +28,10 @@ export class VacationRequestApprovedEvent extends VacationRequestEvent {
 	static readonly TYPE = "VacationRequestApproved";
 	readonly type = VacationRequestApprovedEvent.TYPE;
 
-	constructor(request: VacationRequestDto, public readonly validatorId: number) {
+	constructor(
+		request: VacationRequestDto,
+		public readonly validatorId: number
+	) {
 		super(request);
 	}
 }
@@ -51,7 +54,10 @@ export class VacationRequestRejectedEvent extends VacationRequestEvent {
 	static readonly TYPE = "VacationRequestRejected";
 	readonly type = VacationRequestRejectedEvent.TYPE;
 
-	constructor(request: VacationRequestDto, public readonly validatorId: number) {
+	constructor(
+		request: VacationRequestDto,
+		public readonly validatorId: number
+	) {
 		super(request);
 	}
 }

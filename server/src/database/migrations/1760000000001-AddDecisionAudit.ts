@@ -16,9 +16,7 @@ export class AddDecisionAudit1760000000001 implements MigrationInterface {
 		`);
 
 		// Requests decided before this migration: the best known decision time is the last update.
-		await queryRunner.query(
-			`UPDATE "vacation_requests" SET "decided_at" = "updated_at" WHERE "status" <> 'Pending'`
-		);
+		await queryRunner.query(`UPDATE "vacation_requests" SET "decided_at" = "updated_at" WHERE "status" <> 'Pending'`);
 
 		// A request has a decision time exactly when it has been decided.
 		await queryRunner.query(`
@@ -28,9 +26,7 @@ export class AddDecisionAudit1760000000001 implements MigrationInterface {
 		`);
 
 		// Speeds up ON DELETE SET NULL when a user is removed.
-		await queryRunner.query(
-			`CREATE INDEX "idx_vacation_requests_decided_by" ON "vacation_requests" ("decided_by")`
-		);
+		await queryRunner.query(`CREATE INDEX "idx_vacation_requests_decided_by" ON "vacation_requests" ("decided_by")`);
 	}
 
 	public async down(queryRunner: QueryRunner): Promise<void> {
