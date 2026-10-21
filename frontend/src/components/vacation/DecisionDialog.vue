@@ -4,15 +4,20 @@ import AlertBanner from "@/components/ui/AlertBanner.vue";
 import BaseButton from "@/components/ui/BaseButton.vue";
 import FormField from "@/components/ui/FormField.vue";
 import ModalDialog from "@/components/ui/ModalDialog.vue";
+import StatusBadge from "@/components/ui/StatusBadge.vue";
 import type { VacationRequest } from "@/types/api";
 import { daysInclusive, formatDate } from "@/utils/dates";
 
 export type Decision = "approve" | "reject";
 
-/** Confirms an approval (optional comment) or a rejection (comment required, rule 5). */
+/**
+ * Confirms an approval (optional comment) or a rejection (comment required, rule 5).
+ * With `revising`, it corrects an earlier decision instead of deciding a pending request.
+ */
 const props = defineProps<{
 	request: VacationRequest | null;
 	decision: Decision | null;
+	revising?: boolean;
 	submitting?: boolean;
 	error?: string | null;
 }>();
@@ -24,6 +29,16 @@ const attempted = ref(false);
 
 const open = computed(() => Boolean(props.request && props.decision));
 const isReject = computed(() => props.decision === "reject");
+
+const title = computed(() => {
+	if (props.revising) return isReject.value ? "Change decision to rejected" : "Change decision to approved";
+	return isReject.value ? "Reject request" : "Approve request";
+});
+
+const confirmLabel = computed(() => {
+	if (props.revising) return isReject.value ? "Change to rejected" : "Change to approved";
+	return isReject.value ? "Reject" : "Approve";
+});
 
 watch(open, (isOpen) => {
 	if (isOpen) {
@@ -44,8 +59,12 @@ const confirm = () => {
 </script>
 
 <template>
-	<ModalDialog :open="open" :title="isReject ? 'Reject request' : 'Approve request'" @close="emit('close')">
+	<ModalDialog :open="open" :title="title" @close="emit('close')">
 		<div v-if="request" class="space-y-4">
+			<p v-if="revising" class="flex items-center gap-2">
+				Currently <StatusBadge :status="request.status" />
+				<span class="text-slate-500">· the employee will see the new decision.</span>
+			</p>
 			<p>
 				<span class="font-medium text-slate-900">{{ request.user?.name }}</span>
 				· {{ formatDate(request.startDate) }} → {{ formatDate(request.endDate) }}
@@ -76,7 +95,7 @@ const confirm = () => {
 		<template #footer>
 			<BaseButton variant="secondary" @click="emit('close')">Cancel</BaseButton>
 			<BaseButton :variant="isReject ? 'danger' : 'success'" :loading="submitting" @click="confirm">
-				{{ isReject ? "Reject" : "Approve" }}
+				{{ confirmLabel }}
 			</BaseButton>
 		</template>
 	</ModalDialog>

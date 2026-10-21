@@ -11,6 +11,10 @@ import {
 	CancelVacationRequestHandler,
 } from "./modules/vacation-requests/commands/cancel-vacation-request.command";
 import {
+	ChangeVacationRequestDecisionCommand,
+	ChangeVacationRequestDecisionHandler,
+} from "./modules/vacation-requests/commands/change-vacation-request-decision.command";
+import {
 	CreateVacationRequestCommand,
 	CreateVacationRequestHandler,
 } from "./modules/vacation-requests/commands/create-vacation-request.command";
@@ -37,6 +41,10 @@ commandBus.register(UpdateVacationRequestCommand.TYPE, new UpdateVacationRequest
 commandBus.register(CancelVacationRequestCommand.TYPE, new CancelVacationRequestHandler(transactional));
 commandBus.register(ApproveVacationRequestCommand.TYPE, new ApproveVacationRequestHandler(transactional));
 commandBus.register(RejectVacationRequestCommand.TYPE, new RejectVacationRequestHandler(transactional));
+commandBus.register(
+	ChangeVacationRequestDecisionCommand.TYPE,
+	new ChangeVacationRequestDecisionHandler(transactional)
+);
 
 registerVacationRequestLogListener(eventBus);
 

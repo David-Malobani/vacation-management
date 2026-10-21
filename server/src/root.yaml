@@ -242,6 +242,39 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/BusinessRuleViolation" }
 
+  /vacation-requests/:id/decision:
+    put:
+      tags: [Vacation requests]
+      summary: Correct a decision made by mistake, before the vacation starts (ChangeVacationRequestDecisionCommand)
+      description: |
+        Switches an approved request to rejected or a rejected one to approved.
+        Pending requests must use approve/reject. A comment is required when the new decision is Rejected.
+      x-roles: [Validator]
+      x-inputParser: modules/vacation-requests/vacation-request.handlers#parseChangeDecision
+      x-handler: modules/vacation-requests/vacation-request.handlers#changeDecision
+      parameters:
+        - { $ref: "#/components/parameters/Id" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [Approved, Rejected] }
+                comment: { type: string, nullable: true, description: Required when status is Rejected }
+      responses:
+        "200":
+          description: Decision changed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VacationRequest" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/BusinessRuleViolation" }
+
   /team/vacations:
     get:
       tags: [Team]

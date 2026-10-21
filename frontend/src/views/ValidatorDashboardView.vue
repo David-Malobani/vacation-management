@@ -12,6 +12,7 @@ import DecisionDialog, { type Decision } from "@/components/vacation/DecisionDia
 import VacationRequestTable from "@/components/vacation/VacationRequestTable.vue";
 import { usePaginatedList } from "@/composables/usePaginatedList";
 import { type User, VACATION_STATUSES, type VacationRequest, type VacationStatus } from "@/types/api";
+import { todayIso } from "@/utils/dates";
 
 const route = useRoute();
 const router = useRouter();
@@ -67,18 +68,28 @@ onMounted(async () => {
 	}
 });
 
-// --- Approve / reject ---------------------------------------------------------
+// --- Approve / reject / change a decision -------------------------------------
 const selected = ref<VacationRequest | null>(null);
 const decision = ref<Decision | null>(null);
+/** True when correcting an earlier decision rather than deciding a pending request. */
+const revising = ref(false);
 const deciding = ref(false);
 const decisionError = ref<string | null>(null);
 const notice = ref<string | null>(null);
 
+/** Same rule as the API: a decision can be corrected until the vacation starts. */
+const canChangeDecision = (request: VacationRequest) => request.status !== "Pending" && request.startDate >= todayIso();
+
 const openDecision = (request: VacationRequest, choice: Decision) => {
 	selected.value = request;
 	decision.value = choice;
+	revising.value = request.status !== "Pending";
 	decisionError.value = null;
 };
+
+/** The only possible correction is the opposite decision. */
+const openChangeDecision = (request: VacationRequest) =>
+	openDecision(request, request.status === "Approved" ? "reject" : "approve");
 
 const closeDecision = () => {
 	selected.value = null;
@@ -91,11 +102,16 @@ const confirmDecision = async (comment: string | null) => {
 	decisionError.value = null;
 	try {
 		const request = selected.value;
-		const updated =
-			decision.value === "approve"
+		const status = decision.value === "approve" ? "Approved" : "Rejected";
+		const updated = revising.value
+			? await vacationRequestsApi.changeDecision(request.id, status, comment)
+			: status === "Approved"
 				? await vacationRequestsApi.approve(request.id, comment)
 				: await vacationRequestsApi.reject(request.id, comment ?? "");
-		notice.value = `${request.user?.name ?? "The"}'s request was ${updated.status.toLowerCase()}.`;
+		const owner = request.user?.name ?? "The";
+		notice.value = revising.value
+			? `${owner}'s request was changed to ${updated.status.toLowerCase()}.`
+			: `${owner}'s request was ${updated.status.toLowerCase()}.`;
 		closeDecision();
 		await list.load();
 	} catch (err) {
@@ -110,7 +126,10 @@ const confirmDecision = async (comment: string | null) => {
 	<div class="space-y-6">
 		<header>
 			<h1 class="text-2xl font-semibold text-slate-900">Vacation requests</h1>
-			<p class="mt-1 text-sm text-slate-500">Review your team's requests. Pending requests can be approved or rejected.</p>
+			<p class="mt-1 text-sm text-slate-500">
+				Review your team's requests. Pending requests can be approved or rejected; a decision made by mistake can be
+				edited until the vacation starts.
+			</p>
 		</header>
 
 		<AlertBanner v-if="notice" variant="success" dismissible @dismiss="notice = null">{{ notice }}</AlertBanner>
@@ -140,6 +159,14 @@ const confirmDecision = async (comment: string | null) => {
 						<BaseButton variant="success" size="sm" @click="openDecision(request, 'approve')">Approve</BaseButton>
 						<BaseButton variant="danger" size="sm" @click="openDecision(request, 'reject')">Reject</BaseButton>
 					</div>
+					<BaseButton
+						v-else-if="canChangeDecision(request)"
+						variant="secondary"
+						size="sm"
+						@click="openChangeDecision(request)"
+					>
+						Edit decision
+					</BaseButton>
 				</template>
 			</VacationRequestTable>
 
@@ -157,6 +184,7 @@ const confirmDecision = async (comment: string | null) => {
 		<DecisionDialog
 			:request="selected"
 			:decision="decision"
+			:revising="revising"
 			:submitting="deciding"
 			:error="decisionError"
 			@confirm="confirmDecision"

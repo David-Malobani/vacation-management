@@ -1,5 +1,5 @@
 import { DomainEvent } from "../../../core/events/event-bus";
-import { VacationRequestDto } from "../vacation-request.entity";
+import { VacationRequestDto, VacationStatus } from "../vacation-request.entity";
 
 /** Facts emitted by the vacation-requests module after a command succeeds. */
 abstract class VacationRequestEvent implements DomainEvent {
@@ -29,6 +29,20 @@ export class VacationRequestApprovedEvent extends VacationRequestEvent {
 	readonly type = VacationRequestApprovedEvent.TYPE;
 
 	constructor(request: VacationRequestDto, public readonly validatorId: number) {
+		super(request);
+	}
+}
+
+/** A validator corrected an earlier decision (approved ↔ rejected). */
+export class VacationRequestDecisionChangedEvent extends VacationRequestEvent {
+	static readonly TYPE = "VacationRequestDecisionChanged";
+	readonly type = VacationRequestDecisionChangedEvent.TYPE;
+
+	constructor(
+		request: VacationRequestDto,
+		public readonly validatorId: number,
+		public readonly previousStatus: VacationStatus
+	) {
 		super(request);
 	}
 }
