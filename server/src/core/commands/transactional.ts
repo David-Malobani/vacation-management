@@ -12,6 +12,9 @@ export interface TransactionContext {
 	record(event: DomainEvent): void;
 }
 
+/** The work a command does inside the transaction; whatever it returns becomes the command's result. */
+export type TransactionalWork<TResult> = (context: TransactionContext) => Promise<TResult>;
+
 export type DataSourceProvider = () => Promise<Pick<DataSource, "transaction">>;
 
 export class Transactional {
@@ -20,16 +23,16 @@ export class Transactional {
 		private readonly eventBus: EventBus
 	) {}
 
-	async run<T>(work: (context: TransactionContext) => Promise<T>): Promise<T> {
+	async run<TResult>(work: TransactionalWork<TResult>): Promise<TResult> {
 		const dataSource = await this.getDataSource();
-		const events: DomainEvent[] = [];
+		const recordedEvents: DomainEvent[] = [];
 
 		const result = await dataSource.transaction((manager) =>
-			work({ manager, record: (event) => events.push(event) })
+			work({ manager, record: (event) => recordedEvents.push(event) })
 		);
 
-		// Reached only after COMMIT; a thrown error above discards the events.
-		await this.eventBus.publishAll(events);
+		// Reached only after COMMIT; a thrown error above discards the recorded events.
+		await this.eventBus.publishAll(recordedEvents);
 		return result;
 	}
 }
