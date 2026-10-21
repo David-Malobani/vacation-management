@@ -43,6 +43,12 @@ const logRequests = (req: Request, res: ExpressResponse, next: NextFunction) => 
 	next();
 };
 
+const expressErrorBody = (status: number) => {
+	if (status === 413) return { code: "PAYLOAD_TOO_LARGE", message: "Request body is too large (max 100kb)" };
+	if (status < 500) return { code: "BAD_REQUEST", message: "The request could not be read" };
+	return { code: "INTERNAL_ERROR", message: "An unexpected error occurred" };
+};
+
 export const createServer = () => {
 	const app = express();
 	app.disable("x-powered-by");
@@ -57,6 +63,13 @@ export const createServer = () => {
 			res.setHeader(name, String(value));
 		}
 		res.status(result.statusCode ?? 200).send(result.statusCode === 204 ? undefined : result.body);
+	});
+
+	// Errors raised by Express itself (e.g. body over the size limit) get the API's JSON error shape.
+	app.use((error: { status?: number }, _req: Request, res: ExpressResponse, _next: NextFunction) => {
+		const status = error.status ?? 500;
+		if (status >= 500) console.error("[http] Unhandled error", error);
+		res.status(status).json({ error: expressErrorBody(status) });
 	});
 
 	return app;

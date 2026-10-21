@@ -44,8 +44,16 @@ export const readQuery = (event: CommonEvent): Record<string, string> => {
 	return query;
 };
 
-const POSITIVE_INTEGER = "must be a positive integer";
-const idSchema = z.coerce.number({ error: POSITIVE_INTEGER }).int(POSITIVE_INTEGER).positive(POSITIVE_INTEGER);
+/** Largest value of a Postgres `integer` column; bigger ids would make the query itself fail. */
+const MAX_DB_INTEGER = 2_147_483_647;
+const INVALID_ID = "must be a positive integer";
+
+/** A database id coming from a path or query parameter. */
+export const idSchema = z.coerce
+	.number({ error: INVALID_ID })
+	.int(INVALID_ID)
+	.positive(INVALID_ID)
+	.max(MAX_DB_INTEGER, INVALID_ID);
 
 export const readIdParam = (event: CommonEvent, name = "id"): number =>
 	validate(z.object({ [name]: idSchema }), event.pathParameters ?? {})[name] as number;
