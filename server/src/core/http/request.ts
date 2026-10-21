@@ -3,7 +3,7 @@ import { z } from "zod";
 import { ValidationError } from "../errors";
 
 /** Validates untrusted input; the first issue becomes the message, all issues go in details. */
-export const validate = <T>(schema: z.ZodType<T>, data: unknown): T => {
+export const validate = <ValueType>(schema: z.ZodType<ValueType>, data: unknown): ValueType => {
 	const result = schema.safeParse(data);
 	if (result.success) {
 		return result.data;

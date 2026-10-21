@@ -47,8 +47,8 @@ export interface TeamVacation {
 	status: Exclude<VacationStatus, "Rejected">;
 }
 
-export interface Page<TItem> {
-	items: TItem[];
+export interface Page<ItemType> {
+	items: ItemType[];
 	page: number;
 	pageSize: number;
 	total: number;

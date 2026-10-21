@@ -6,8 +6,8 @@ import type { Page } from "@/types/api";
  * Loading / error / page state for any paginated endpoint. Out-of-order
  * responses are ignored, so quickly changing a filter never shows stale data.
  */
-export function usePaginatedList<TItem>(fetchPage: (page: number) => Promise<Page<TItem>>) {
-	const items = shallowRef<TItem[]>([]);
+export function usePaginatedList<ItemType>(fetchPage: (page: number) => Promise<Page<ItemType>>) {
+	const items = shallowRef<ItemType[]>([]);
 	const page = ref(1);
 	const pageSize = ref(10);
 	const total = ref(0);

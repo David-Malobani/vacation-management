@@ -3,8 +3,8 @@ export interface PageRequest {
 	pageSize: number;
 }
 
-export interface Page<TItem> {
-	items: TItem[];
+export interface Page<ItemType> {
+	items: ItemType[];
 	page: number;
 	pageSize: number;
 	total: number;
@@ -14,7 +14,11 @@ export interface Page<TItem> {
 export const DEFAULT_PAGE_SIZE = 10;
 export const MAX_PAGE_SIZE = 100;
 
-export const toPage = <TItem>(items: TItem[], total: number, { page, pageSize }: PageRequest): Page<TItem> => ({
+export const toPage = <ItemType>(
+	items: ItemType[],
+	total: number,
+	{ page, pageSize }: PageRequest
+): Page<ItemType> => ({
 	items,
 	page,
 	pageSize,

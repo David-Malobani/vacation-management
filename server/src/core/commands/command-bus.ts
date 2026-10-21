@@ -6,24 +6,24 @@
  * build commands and dispatch them, so the business logic stays independent
  * of the transport (HTTP today, SQS/Lambda invoke tomorrow).
  */
-export interface Command<TResult = unknown> {
+export interface Command<ResultType = unknown> {
 	readonly type: string;
 	/** Phantom field so TypeScript can infer the handler's result type. */
-	readonly __result?: TResult;
+	readonly __result?: ResultType;
 }
 
-export interface CommandHandler<TCommand extends Command<TResult>, TResult = unknown> {
-	execute(command: TCommand): Promise<TResult>;
+export interface CommandHandler<CommandType extends Command<ResultType>, ResultType = unknown> {
+	execute(command: CommandType): Promise<ResultType>;
 }
 
-type CommandResult<TCommand> = TCommand extends Command<infer TResult> ? TResult : never;
+type CommandResult<CommandType> = CommandType extends Command<infer ResultType> ? ResultType : never;
 
 export class CommandBus {
 	private readonly handlers = new Map<string, CommandHandler<any, any>>();
 
-	register<TCommand extends Command<any>>(
+	register<CommandType extends Command<any>>(
 		type: string,
-		handler: CommandHandler<TCommand, CommandResult<TCommand>>
+		handler: CommandHandler<CommandType, CommandResult<CommandType>>
 	): void {
 		if (this.handlers.has(type)) {
 			throw new Error(`A handler is already registered for command "${type}"`);
@@ -31,7 +31,7 @@ export class CommandBus {
 		this.handlers.set(type, handler);
 	}
 
-	async dispatch<TCommand extends Command<any>>(command: TCommand): Promise<CommandResult<TCommand>> {
+	async dispatch<CommandType extends Command<any>>(command: CommandType): Promise<CommandResult<CommandType>> {
 		const handler = this.handlers.get(command.type);
 		if (!handler) {
 			throw new Error(`No handler registered for command "${command.type}"`);

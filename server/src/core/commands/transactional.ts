@@ -13,7 +13,7 @@ export interface TransactionContext {
 }
 
 /** The work a command does inside the transaction; whatever it returns becomes the command's result. */
-export type TransactionalWork<TResult> = (context: TransactionContext) => Promise<TResult>;
+export type TransactionalWork<ResultType> = (context: TransactionContext) => Promise<ResultType>;
 
 export type DataSourceProvider = () => Promise<Pick<DataSource, "transaction">>;
 
@@ -23,7 +23,7 @@ export class Transactional {
 		private readonly eventBus: EventBus
 	) {}
 
-	async run<TResult>(work: TransactionalWork<TResult>): Promise<TResult> {
+	async run<ResultType>(work: TransactionalWork<ResultType>): Promise<ResultType> {
 		const dataSource = await this.getDataSource();
 		const recordedEvents: DomainEvent[] = [];
 
