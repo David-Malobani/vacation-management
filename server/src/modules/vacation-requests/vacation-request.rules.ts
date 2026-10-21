@@ -1,4 +1,4 @@
-import { BusinessRuleError, ValidationError } from "../../core/errors";
+import { BusinessRuleError, ForbiddenError, ValidationError } from "../../core/errors";
 import { VacationStatus } from "./vacation-request.entity";
 
 /**
@@ -44,6 +44,13 @@ export const assertModifiable = (status: VacationStatus): void => {
 	}
 	if (status !== VacationStatus.Pending) {
 		throw new BusinessRuleError(`${status} requests cannot be modified`);
+	}
+};
+
+/** Requesters may only edit or cancel their own requests. */
+export const assertOwnedBy = (ownerId: number, actorId: number): void => {
+	if (ownerId !== actorId) {
+		throw new ForbiddenError("You can only change your own vacation requests");
 	}
 };
 
