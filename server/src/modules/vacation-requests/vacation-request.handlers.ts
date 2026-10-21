@@ -6,6 +6,7 @@ import { container } from "../../container";
 import { getDataSource } from "../../database/data-source";
 import { ApproveVacationRequestCommand } from "./commands/approve-vacation-request.command";
 import { CancelVacationRequestCommand } from "./commands/cancel-vacation-request.command";
+import { ChangeVacationRequestDecisionCommand } from "./commands/change-vacation-request-decision.command";
 import { CreateVacationRequestCommand } from "./commands/create-vacation-request.command";
 import { RejectVacationRequestCommand } from "./commands/reject-vacation-request.command";
 import { UpdateVacationRequestCommand } from "./commands/update-vacation-request.command";
@@ -13,6 +14,7 @@ import { listTeamVacations, listVacationRequests, VacationRequestFilter } from "
 import {
 	allRequestsQuerySchema,
 	approveBodySchema,
+	changeDecisionBodySchema,
 	myRequestsQuerySchema,
 	rejectBodySchema,
 	teamVacationsQuerySchema,
@@ -71,6 +73,15 @@ export const parseRejectVacationRequest: InputParserFn<RejectVacationRequestComm
 };
 
 export const rejectVacationRequest: HandlerFn<RejectVacationRequestCommand> = async (command) =>
+	commandBus.dispatch(command);
+
+/** PUT /vacation-requests/:id/decision */
+export const parseChangeDecision: InputParserFn<ChangeVacationRequestDecisionCommand> = (event, auth) => {
+	const { status, comment } = validate(changeDecisionBodySchema, readJsonBody(event));
+	return new ChangeVacationRequestDecisionCommand(readIdParam(event), auth.user.id, status, comment);
+};
+
+export const changeDecision: HandlerFn<ChangeVacationRequestDecisionCommand> = async (command) =>
 	commandBus.dispatch(command);
 
 // --- Queries ---------------------------------------------------------------

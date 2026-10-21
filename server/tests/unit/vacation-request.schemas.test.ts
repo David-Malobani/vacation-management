@@ -3,6 +3,7 @@ import { ValidationError } from "../../src/core/errors";
 import { validate } from "../../src/core/http/request";
 import {
 	allRequestsQuerySchema,
+	changeDecisionBodySchema,
 	rejectBodySchema,
 	teamVacationsQuerySchema,
 	vacationRequestBodySchema,
@@ -51,5 +52,21 @@ describe("teamVacationsQuerySchema", () => {
 	it("rejects an inverted or overly long range", () => {
 		expect(() => validate(teamVacationsQuerySchema, { from: "2026-11-30", to: "2026-11-01" })).toThrow(ValidationError);
 		expect(() => validate(teamVacationsQuerySchema, { from: "2026-01-01", to: "2026-12-31" })).toThrow(ValidationError);
+	});
+});
+
+describe("changeDecisionBodySchema", () => {
+	it("accepts approving without a comment", () => {
+		expect(validate(changeDecisionBodySchema, { status: "Approved" })).toEqual({ status: "Approved", comment: null });
+	});
+
+	it("requires a comment when changing to rejected", () => {
+		expect(() => validate(changeDecisionBodySchema, { status: "Rejected", comment: " " })).toThrow(
+			"A comment is required when rejecting a request"
+		);
+	});
+
+	it("only accepts a final decision", () => {
+		expect(() => validate(changeDecisionBodySchema, { status: "Pending" })).toThrow(ValidationError);
 	});
 });

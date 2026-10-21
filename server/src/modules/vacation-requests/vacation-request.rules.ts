@@ -61,6 +61,28 @@ export const assertDecidable = (status: VacationStatus): void => {
 	}
 };
 
+/**
+ * A validator may correct a decision made by mistake (approved ↔ rejected),
+ * but only until the vacation starts. Requesters still can never modify an
+ * approved request (rule 3).
+ */
+export const assertDecisionChangeable = (
+	current: VacationStatus,
+	next: VacationStatus,
+	startDate: string,
+	today: string = todayIso()
+): void => {
+	if (current === VacationStatus.Pending) {
+		throw new BusinessRuleError("This request has not been decided yet; approve or reject it instead");
+	}
+	if (current === next) {
+		throw new BusinessRuleError(`This request is already ${current.toLowerCase()}`);
+	}
+	if (startDate < today) {
+		throw new BusinessRuleError("This vacation has already started, so its decision can no longer be changed");
+	}
+};
+
 /** Rule 5: a rejected request must contain a rejection comment. */
 export const assertRejectionComment = (comment: string | null | undefined): string => {
 	const trimmed = comment?.trim() ?? "";

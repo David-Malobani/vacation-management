@@ -37,6 +37,18 @@ export const rejectBodySchema = z.object({
 		.max(1000, "must be at most 1000 characters"),
 });
 
+export const changeDecisionBodySchema = z
+	.object({
+		status: z.enum([VacationStatus.Approved, VacationStatus.Rejected], {
+			error: "must be Approved or Rejected",
+		}),
+		comment: optionalText(1000),
+	})
+	.refine(({ status, comment }) => status !== VacationStatus.Rejected || comment, {
+		message: REJECTION_COMMENT_REQUIRED,
+		path: ["comment"],
+	});
+
 const pagination = {
 	page: z.coerce.number().int().min(1).default(1),
 	pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),

@@ -3,6 +3,7 @@ import { BusinessRuleError, ForbiddenError, ValidationError } from "../../src/co
 import { VacationStatus } from "../../src/modules/vacation-requests/vacation-request.entity";
 import {
 	assertDecidable,
+	assertDecisionChangeable,
 	assertEndAfterStart,
 	assertModifiable,
 	assertNotInPast,
@@ -106,5 +107,34 @@ describe("decisions and ownership", () => {
 	it("only the owner may change a request", () => {
 		expect(() => assertOwnedBy(1, 1)).not.toThrow();
 		expect(() => assertOwnedBy(1, 2)).toThrow(ForbiddenError);
+	});
+});
+
+describe("changing a decision made by mistake", () => {
+	it("allows flipping approved ↔ rejected before the vacation starts", () => {
+		expect(() =>
+			assertDecisionChangeable(VacationStatus.Approved, VacationStatus.Rejected, "2026-11-01", TODAY)
+		).not.toThrow();
+		expect(() =>
+			assertDecisionChangeable(VacationStatus.Rejected, VacationStatus.Approved, TODAY, TODAY)
+		).not.toThrow();
+	});
+
+	it("refuses pending requests, which must be approved or rejected instead", () => {
+		expect(() =>
+			assertDecisionChangeable(VacationStatus.Pending, VacationStatus.Approved, "2026-11-01", TODAY)
+		).toThrow("has not been decided yet");
+	});
+
+	it("refuses a no-op change", () => {
+		expect(() =>
+			assertDecisionChangeable(VacationStatus.Approved, VacationStatus.Approved, "2026-11-01", TODAY)
+		).toThrow("already approved");
+	});
+
+	it("refuses once the vacation has started", () => {
+		expect(() =>
+			assertDecisionChangeable(VacationStatus.Approved, VacationStatus.Rejected, "2026-10-20", TODAY)
+		).toThrow(BusinessRuleError);
 	});
 });
