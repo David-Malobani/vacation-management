@@ -12,6 +12,10 @@ const read = (key: string, fallback?: string): string => {
 };
 
 export const env = {
+	http: {
+		port: Number(read("PORT", "3000")),
+		corsOrigin: read("FRONT_END_URL", "http://localhost:5173"),
+	},
 	db: {
 		host: read("DB_HOST", "localhost"),
 		port: Number(read("DB_PORT", "5432")),
